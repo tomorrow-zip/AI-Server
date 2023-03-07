@@ -2,16 +2,13 @@ import bentoml
 import torch.cuda
 
 from mmdet.apis import init_detector
-from pathlib import Path
 
-import os
 
 config_file = (
-    "./configs/mask2former/"
-    "mask2former_swin-l-p4-w12-384-in21k_lsj_16x1_100e_coco-panoptic.py"
+    "checkpoints/detector.config.py"
 )
 weight_file = (
-    "./checkpoints/"
+    "checkpoints/"
     "mask2former_swin-l-p4-w12-384-in21k_lsj_16x1_100e_coco-panoptic_20220407_104949-d4919c44.pth"
 )
 
