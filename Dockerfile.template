@@ -1,0 +1,14 @@
+{% extends bento_base_template %}
+{% block SETUP_BENTO_BASE_IMAGE %}
+
+{{ super() }}
+RUN apt-get update && apt-get install sudo
+RUN apt-get update && apt-get install -y git ninja-build libglib2.0-0 libsm6 libxrender-dev libxext6 ffmpeg\
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+{% endblock %}
+{% block SETUP_BENTO_COMPONENTS %}
+{{ super() }}
+RUN pip install -U openmim && mim install mmcv-full
+RUN pip install mmdet
+{% endblock %}
