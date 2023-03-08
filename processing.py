@@ -57,13 +57,12 @@ def detect_process(result, classes):
     }
 
 
-
-def classifier_process(result_classfied, label_list):
+def classifier_process(result, label_list):
     detected_class = np.unique([label.split(":")[0] for label in label_list])
 
     accum_result = {key: [] for key in detected_class}
 
-    for idx, (r, label) in enumerate(zip(result_classfied, label_list)):
+    for idx, (r, label) in enumerate(zip(result, label_list)):
         l = label.split(":")[0]
         accum_result[l].append(r)
         # results.append({lab: float(conf) for lab, conf in zip(class_label, confidence)})
