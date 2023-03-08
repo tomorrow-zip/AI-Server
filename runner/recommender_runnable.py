@@ -6,6 +6,7 @@ from models import recommend_model
 
 class RecommenderRunnable(bentoml.Runnable):
     SUPPORTED_RESOURCES = "cpu"
+    SUPPORTS_CPU_MULTI_THREADING = False
 
     def __init__(self):
         self.model = bentoml.picklable_model.load_model(recommend_model)
