@@ -4,16 +4,7 @@ include:
 exclude:
     - 'model/*'
 python:
-    packages:
-    - "torch==1.10.1+cu113"
-    - "torchvision==0.11.2+cu113"
-    - "torchaudio==0.10.1"
-    - "opencv-python"
-    - "flask"
-    - "tensorflow==2.9.0"
-    - "umap-learn"
-    find_links:
-        - https://download.pytorch.org/whl/cu113/torch_stable.html
+  requirements_txt: "./requirements.txt"
 docker:
     distro: debian
     python_version: "3.8"
