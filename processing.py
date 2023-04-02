@@ -77,30 +77,62 @@ def classifier_process(result, label_list):
     return results
 
 
-def make_bbox_images(detected_objects, img):
-    layers = np.zeros(shape=(0, 100, 100, 3), dtype=np.uint8)
+def make_bbox_images(detected_objects, img, resize_width=100, resize_height=100):
+    if len(img.shape) == 2:  # 1채널 이미지 처리
+        img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
 
-    label_list = []
+    layers = np.zeros(shape=(0, resize_height, resize_width, 3), dtype=np.uint8)
+    labels = []
 
-    for i_, (label, objs) in enumerate(detected_objects.items()):
-        objs = dict(objs)
-
-        for obj_id, segms in objs.items():
-            x, y, w, h = segms["bbox"]
+    for label, objs in detected_objects.items():
+        for obj_id, segms_data in objs.items():
+            segms = segms_data["segms"]
+            x, y, w, h = segms_data["bbox"]
             clipped_result = np.zeros(shape=img.shape, dtype=np.uint8)
 
-            for segm in segms["segms"]:
-                s = np.array(
+            mask = None
+            for segm in segms:
+                contour_points = np.array(
                     list(zip(segm["segm"]["x"], segm["segm"]["y"])), dtype=np.int32
                 )
-                mask = np.zeros_like(clipped_result)
-                mask = cv2.fillPoly(mask, [s], (255, 255, 255))
-                clipped_result = cv2.add(clipped_result, cv2.bitwise_and(img, mask))
+                mask = np.zeros_like(img)
+                mask = cv2.fillPoly(mask, [contour_points], (255, 255, 255))
+                clipped_result_portion = cv2.bitwise_and(img, mask)
+                clipped_result = cv2.add(clipped_result, clipped_result_portion)
 
+            inverse_mask = cv2.bitwise_not(mask)
+            white_bg = np.full(img.shape, 255, dtype=np.uint8)
+            white_bg_portion = cv2.bitwise_and(white_bg, inverse_mask)
+
+            clipped_result = cv2.add(clipped_result, white_bg_portion)
             clipped_result = clipped_result[y : y + h, x : x + w]
-            clipped_result = cv2.resize(clipped_result, (100, 100))
-            layers = np.concatenate([layers, clipped_result[np.newaxis]])
+            clipped_result = cv2.cvtColor(clipped_result, cv2.COLOR_RGB2BGR)
 
-            label_list.append(f"{label}:{obj_id}")
+            # 비율을 유지한 상태로 resize
+            aspect_ratio = float(w) / float(h)
+            new_width = resize_width
+            new_height = int(resize_width / aspect_ratio)
 
-    return layers, label_list
+            if new_height > resize_height:
+                new_width = int(resize_height * aspect_ratio)
+                new_height = resize_height
+
+            resized_img = cv2.resize(clipped_result, (new_width, new_height))
+            top_pad = (resize_height - new_height) // 2
+            bottom_pad = resize_height - new_height - top_pad
+            left_pad = (resize_width - new_width) // 2
+            right_pad = resize_width - new_width - left_pad
+            resized_img = cv2.copyMakeBorder(
+                resized_img,
+                top_pad,
+                bottom_pad,
+                left_pad,
+                right_pad,
+                cv2.BORDER_CONSTANT,
+                value=[255, 255, 255],
+            )
+
+            layers = np.concatenate([layers, resized_img[np.newaxis]])
+            labels.append(f"{label}:{obj_id}")
+
+    return layers, labels
